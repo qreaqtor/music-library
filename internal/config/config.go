@@ -1,30 +1,23 @@
 package config
 
-import "time"
-
 type Config struct {
-	Addr Adress `yaml:"address"`
+	ApiConfig
+	PostgresConfig
 
-	Env string `yaml:"env"`
-
-	Api ApiConfig `yaml:"api"`
-
-	Postgres PostgresConfig `yaml:"postgres"`
+	Host string `env:"APP_HOST" env-required:"true"`
+	Port int    `env:"APP_PORT" env-required:"true"`
+	Env  string `env:"APP_ENV" env-required:"true"`
 }
 
 type ApiConfig struct {
-	Version int `yaml:"version"`
+	Version int `env:"API_VERSION" env-required:"true"`
 }
 
 type PostgresConfig struct {
-	User       string             `yaml:"user"`
-	Password   string             `yaml:"password"`
-	Database   string             `yaml:"database"`
-	Addr       Adress             `yaml:"address"`
-	Connection PostgresConnection `yaml:"connection"`
-}
+	User     string `env:"POSTGRES_USER" env-required:"true"`
+	Password string `env:"POSTGRES_PASSWORD" env-required:"true"`
+	Database string `env:"POSTGRES_DATABASE" env-required:"true"`
 
-type PostgresConnection struct {
-	Attempts int           `yaml:"attempts"`
-	Delay    time.Duration `yaml:"delay"`
+	Host string `env:"POSTGRES_HOST" env-required:"true"`
+	Port int    `env:"POSTGRES_PORT" env-required:"true"`
 }

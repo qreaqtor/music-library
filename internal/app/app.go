@@ -16,6 +16,8 @@ type App struct {
 }
 
 func NewApp(ctx context.Context, cfg *config.Config) *App {
+	setupLogger(cfg.Env)
+
 	return &App{
 	}
 }

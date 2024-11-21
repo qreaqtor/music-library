@@ -1,0 +1,27 @@
+services:
+  postgres:
+    image: postgres:alpine3.20
+    ports:
+      - '5432:5432'
+    environment:
+      - POSTGRES_DB=songs
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=test
+
+  migrations:
+    build:
+      context: .
+      dockerfile: ./build/migrations.Dockerfile
+    depends_on:
+      - postgres
+    restart: "on-failure"
+
+  app:
+    build:
+      context: .
+      dockerfile: ./build/app.Dockerfile
+    ports:
+      - '50055:50055'
+    depends_on:
+      - postgres
+      - migrations
