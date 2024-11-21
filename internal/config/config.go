@@ -1,8 +1,8 @@
 package config
 
 type Config struct {
-	ApiConfig
-	PostgresConfig
+	Api      ApiConfig
+	Postgres PostgresConfig
 
 	Host string `env:"APP_HOST" env-required:"true"`
 	Port int    `env:"APP_PORT" env-required:"true"`

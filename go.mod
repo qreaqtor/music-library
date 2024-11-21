@@ -4,6 +4,7 @@ go 1.23.2
 
 require (
 	github.com/fatih/color v1.18.0
+	github.com/gorilla/mux v1.8.1
 	github.com/ilyakaznacheev/cleanenv v1.5.0
 	github.com/jackc/pgx/v5 v5.7.1
 )
