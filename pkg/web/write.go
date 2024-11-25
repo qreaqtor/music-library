@@ -3,6 +3,8 @@ package web
 import (
 	"encoding/json"
 	"net/http"
+
+	logmsg "github.com/qreaqtor/music-library/pkg/logging/message"
 )
 
 /*
@@ -10,31 +12,28 @@ import (
 Статус ответа и сообщение достает из msg.
 Возвращает 500 в случае неудачной записи в w.
 */
-func WriteError(w http.ResponseWriter, msg *logMsg) {
+func WriteError(w http.ResponseWriter, msg *logmsg.LogMsg) {
 	msg.Error()
-	http.Error(w, msg.Message, msg.Status)
+	http.Error(w, msg.Text, msg.Status)
 }
 
 /*
 Выполняет сериализацию data и пишет в w.
 В случаае появления ошибки вызывает writeError().
 */
-func WriteData(w http.ResponseWriter, msg *logMsg, data any) {
+func WriteData(w http.ResponseWriter, msg *logmsg.LogMsg, data any) {
 	response, err := json.Marshal(data)
 	if err != nil {
-		msg.Message = err.Error()
-		msg.Status = http.StatusInternalServerError
-		WriteError(w, msg)
+		WriteError(w, msg.With(err.Error(), http.StatusInternalServerError))
 		return
 	}
 
 	w.Header().Set("Content-Type", ContentTypeJSON)
 	_, err = w.Write(response)
 	if err != nil {
-		msg.Message = err.Error()
-		msg.Status = http.StatusInternalServerError
-		WriteError(w, msg)
+		WriteError(w, msg.With(err.Error(), http.StatusInternalServerError))
 		return
 	}
+
 	msg.Info()
 }
