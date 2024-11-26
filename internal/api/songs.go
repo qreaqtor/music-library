@@ -116,7 +116,7 @@ func (s *SongsAPI) info(w http.ResponseWriter, r *http.Request) {
 // @Param song query string true "Song name"
 // @Param offset query int true "Offset for batch"
 // @Param limit query int true "Limit for batch"
-// @Success 200 {object} map[string]string
+// @Success 200 {object} getLyricsResponse
 // @Router /lyrics [get]
 func (s *SongsAPI) getLyrics(w http.ResponseWriter, r *http.Request) {
 	msg := logmsg.NewLogMsg(r.Context(), r.RequestURI, r.Method)
@@ -144,8 +144,8 @@ func (s *SongsAPI) getLyrics(w http.ResponseWriter, r *http.Request) {
 	web.WriteData(
 		w,
 		msg.With("OK", http.StatusOK),
-		map[string]any{
-			"lyrics": text,
+		getLyricsResponse{
+			Lyrics: text,
 		},
 	)
 }
@@ -163,7 +163,7 @@ func (s *SongsAPI) getLyrics(w http.ResponseWriter, r *http.Request) {
 // @Param date_to query string false "Search songs up to this date"
 // @Param offset query int true "Offset for batch"
 // @Param limit query int true "Limit for batch"
-// @Success 200 {object} map[string]any
+// @Success 200 {object} searchResponse
 // @Router /search [get]
 func (s *SongsAPI) search(w http.ResponseWriter, r *http.Request) {
 	msg := logmsg.NewLogMsg(r.Context(), r.RequestURI, r.Method)
@@ -219,8 +219,8 @@ func (s *SongsAPI) search(w http.ResponseWriter, r *http.Request) {
 	web.WriteData(
 		w,
 		msg.With("OK", http.StatusOK),
-		map[string]any{
-			"songs": songs,
+		searchResponse{
+			Songs: songs,
 		},
 	)
 }
@@ -233,7 +233,7 @@ func (s *SongsAPI) search(w http.ResponseWriter, r *http.Request) {
 // @Param group query string true "Group name"
 // @Param song query string true "Song name"
 // @Param update body domain.SongUpdate true "Update parameters"
-// @Success 200 {object} map[string]string
+// @Success 200 {object} messageResponse
 // @Router /update [patch]
 func (s *SongsAPI) update(w http.ResponseWriter, r *http.Request) {
 	msg := logmsg.NewLogMsg(r.Context(), r.RequestURI, r.Method)
@@ -266,9 +266,7 @@ func (s *SongsAPI) update(w http.ResponseWriter, r *http.Request) {
 	web.WriteData(
 		w,
 		msg.With("OK", http.StatusOK),
-		map[string]string{
-			"status": "ok",
-		},
+		messageResponse{"ok"},
 	)
 }
 
@@ -279,7 +277,7 @@ func (s *SongsAPI) update(w http.ResponseWriter, r *http.Request) {
 // @Produce json
 // @Param group query string true "Group name"
 // @Param song query string true "Song name"
-// @Success 200 {object} map[string]string
+// @Success 200 {object} messageResponse
 // @Router /delete [delete]
 func (s *SongsAPI) delete(w http.ResponseWriter, r *http.Request) {
 	msg := logmsg.NewLogMsg(r.Context(), r.RequestURI, r.Method)
@@ -298,9 +296,7 @@ func (s *SongsAPI) delete(w http.ResponseWriter, r *http.Request) {
 	web.WriteData(
 		w,
 		msg.With("OK", http.StatusOK),
-		map[string]string{
-			"status": "ok",
-		},
+		messageResponse{"ok"},
 	)
 }
 
@@ -310,7 +306,7 @@ func (s *SongsAPI) delete(w http.ResponseWriter, r *http.Request) {
 // @Accept json
 // @Produce json
 // @Param song body domain.Song true "Song data"
-// @Success 200 {object} map[string]string
+// @Success 200 {object} messageResponse
 // @Router /create [post]
 func (s *SongsAPI) create(w http.ResponseWriter, r *http.Request) {
 	msg := logmsg.NewLogMsg(r.Context(), r.RequestURI, r.Method)
@@ -338,8 +334,6 @@ func (s *SongsAPI) create(w http.ResponseWriter, r *http.Request) {
 	web.WriteData(
 		w,
 		msg.With("OK", http.StatusOK),
-		map[string]string{
-			"status": "ok",
-		},
+		messageResponse{"ok"},
 	)
 }

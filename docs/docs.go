@@ -180,10 +180,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/api.getLyricsResponse"
                         }
                     }
                 }
@@ -318,6 +315,17 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "api.getLyricsResponse": {
+            "type": "object",
+            "properties": {
+                "lyrics": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
         "domain.Song": {
             "type": "object",
             "required": [

@@ -1,5 +1,12 @@
 basePath: /v1
 definitions:
+  api.getLyricsResponse:
+    properties:
+      lyrics:
+        items:
+          type: string
+        type: array
+    type: object
   domain.Song:
     properties:
       group:
@@ -159,9 +166,7 @@ paths:
         "200":
           description: OK
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/api.getLyricsResponse'
       summary: Get song lyrics
       tags:
       - songs

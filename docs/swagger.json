@@ -173,10 +173,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/api.getLyricsResponse"
                         }
                     }
                 }
@@ -311,6 +308,17 @@
         }
     },
     "definitions": {
+        "api.getLyricsResponse": {
+            "type": "object",
+            "properties": {
+                "lyrics": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
         "domain.Song": {
             "type": "object",
             "required": [
