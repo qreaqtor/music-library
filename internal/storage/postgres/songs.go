@@ -68,7 +68,6 @@ func (s *SongsStorage) Search(ctx context.Context, search *domain.SongSearch) ([
 		len(searchQuery.args)+1,
 		len(searchQuery.args)+2,
 	)
-	slog.Debug(searchQuery.query)
 	searchQuery.args = append(searchQuery.args, search.Limit, search.Offset)
 
 	rows, err := s.db.Query(searchQuery.query, searchQuery.args...)
@@ -191,7 +190,6 @@ func (s *SongsStorage) Update(ctx context.Context, song *domain.Song, update *do
 	} else {
 		_, err = tx.Exec(songQuery.query, songQuery.args...)
 		if err != nil {
-			slog.Debug(fmt.Sprintf("%#v", songQuery))
 			return err
 		}
 	}
