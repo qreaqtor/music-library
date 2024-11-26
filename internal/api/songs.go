@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/mux"
 	"github.com/qreaqtor/music-library/internal/domain"
 	logmsg "github.com/qreaqtor/music-library/pkg/logging/message"
@@ -19,11 +20,14 @@ type service interface {
 
 type SongsAPI struct {
 	srv service
+
+	valid *validator.Validate
 }
 
 func NewSongsAPI(srv service) *SongsAPI {
 	return &SongsAPI{
 		srv: srv,
+		valid: validator.New(validator.WithRequiredStructEnabled()),
 	}
 }
 
@@ -92,7 +96,7 @@ func (s *SongsAPI) update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = web.ValidateStruct(r.Context(), songUpdate)
+	err = s.valid.StructCtx(r.Context(), songUpdate)
 	if err != nil {
 		web.WriteError(w, msg.With(err.Error(), http.StatusUnprocessableEntity))
 		return
@@ -100,7 +104,7 @@ func (s *SongsAPI) update(w http.ResponseWriter, r *http.Request) {
 
 	err = s.srv.Update(r.Context(), song, songUpdate)
 	if err != nil {
-		web.WriteError(w, msg.With(err.Error(), http.StatusBadRequest))
+		web.WriteError(w, msg.With(err.Error(), http.StatusNotFound))
 		return
 	}
 
@@ -147,7 +151,7 @@ func (s *SongsAPI) create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = web.ValidateStruct(r.Context(), song)
+	err = s.valid.StructCtx(r.Context(), song)
 	if err != nil {
 		web.WriteError(w, msg.With(err.Error(), http.StatusUnprocessableEntity))
 		return
@@ -155,7 +159,7 @@ func (s *SongsAPI) create(w http.ResponseWriter, r *http.Request) {
 
 	err = s.srv.Create(r.Context(), song)
 	if err != nil {
-		web.WriteError(w, msg.With(err.Error(), http.StatusBadRequest))
+		web.WriteError(w, msg.With(err.Error(), http.StatusNotFound))
 		return
 	}
 

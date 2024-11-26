@@ -12,8 +12,8 @@ up-local:
 down:
 	docker-compose down && docker rmi music-library-app music-library-migrations
 
-.PHONY: .run-local
-run-local:
+.PHONY: .run-app-local
+run-app-local:
 	export CONFIG_PATH="./config/local.env" && go run cmd/music-library/main.go
 
 .PHONY: .migration-up

@@ -10,17 +10,17 @@ type Song struct {
 type SongInfo struct {
 	Group       string    `json:"group"`
 	SongName    string    `json:"song"`
-	Lyrics      string  `json:"lyrics"`
+	Lyrics      string    `json:"lyrics"`
 	ReleaseDate time.Time `json:"releaseDate"`
 	Link        string    `json:"link"`
 }
 
 type SongUpdate struct {
-	Group       string    `json:"group" validate:"min=1,optional"`
-	SongName    string    `json:"song" validate:"min=1,optional"`
-	Lyrics      []string  `json:"lyrics" validate:"min=1,optional"`
-	Link        string    `json:"link" validate:"http_url,optional"`
-	ReleaseDate time.Time `json:"releaseDate" validate:"optional"`
+	Group       string    `json:"group" validate:"omitempty,min=1"`
+	SongName    string    `json:"song" validate:"omitempty,min=1"`
+	Lyrics      []string  `json:"lyrics" validate:"omitempty,min=1"`
+	Link        string    `json:"link" validate:"omitempty,http_url"`
+	ReleaseDate time.Time `json:"releaseDate" validate:"omitempty"`
 }
 
 type SongSearch struct {
