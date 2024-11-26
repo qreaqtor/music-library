@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"log/slog"
 
 	"github.com/google/uuid"
@@ -30,7 +31,6 @@ func (s *SongsStorage) Info(ctx context.Context, song *domain.Song) (*domain.Son
 		`SELECT s.group_name, s.song, COALESCE(STRING_AGG(v.verse, '\n'), ''), s.releaseDate, COALESCE(s.link, '')
 		FROM songs s LEFT JOIN verses v ON s.id = v.song_id
 		WHERE s.group_name = $1 AND s.song = $2;`
-		//GROUP BY s.id, s.group_name, s.song, s.releaseDate, s.link;
 
 	err := s.db.QueryRow(query, song.Group, song.SongName).
 		Scan(
@@ -49,6 +49,41 @@ func (s *SongsStorage) Info(ctx context.Context, song *domain.Song) (*domain.Son
 	}
 
 	return songInfo, nil
+}
+
+func (s *SongsStorage) Search(ctx context.Context, search *domain.SongSearch) ([]*domain.Song, error) {
+	songs := make([]*domain.Song, 0, search.Limit)
+	var song domain.Song
+
+	searchQuery := getSearchQuery(search)
+
+	searchQuery.query = fmt.Sprintf(
+		`SELECT s.group_name, s.song
+		FROM songs s LEFT JOIN verses v ON s.id = v.song_id
+		%s
+		GROUP BY s.group_name, s.song
+		LIMIT $%d OFFSET $%d;`,
+		searchQuery.query,
+		len(searchQuery.args)+1,
+		len(searchQuery.args)+2,
+	)
+	slog.Debug(searchQuery.query)
+	searchQuery.args = append(searchQuery.args, search.Limit, search.Offset)
+
+	rows, err := s.db.Query(searchQuery.query, searchQuery.args...)
+	if err != nil {
+		return nil, err
+	}
+
+	for rows.Next() {
+		err = rows.Scan(&song.Group, &song.SongName)
+		if err != nil {
+			return nil, err
+		}
+		songs = append(songs, &song)
+	}
+
+	return songs, nil
 }
 
 func (s *SongsStorage) GetLyrics(ctx context.Context, song *domain.Song, batch *domain.Batch) ([]string, error) {

@@ -3,7 +3,6 @@ package storage
 import (
 	"errors"
 	"fmt"
-	"log/slog"
 	"reflect"
 	"strings"
 	"time"
@@ -46,8 +45,6 @@ func getSongUpdateQuery(song *domain.Song, update domain.SongSchema) (*query, er
 		}
 	}
 
-	slog.Debug(fmt.Sprint(args))
-
 	if len(args) == 0 {
 		return nil, ErrEmptySongUpdate
 	}
@@ -88,4 +85,62 @@ func getLyricsUpdateQuery(songID uuid.UUID, update domain.LyricsSchema) (*query,
 		query: q,
 		args:  args,
 	}, nil
+}
+
+func getSearchQuery(search *domain.SongSearch) *query {
+	q := "WHERE"
+	args := make([]any, 0)
+
+	if search.ByGroup != "" {
+		q = fmt.Sprintf("%s s.group_name ILIKE $%d", q, len(args)+1)
+		args = append(args, "%"+search.ByGroup+"%")
+	}
+
+	if search.BySongName != "" {
+		if len(args) != 0 {
+			q += " AND"
+		}
+		q = fmt.Sprintf("%s s.song ILIKE $%d", q, len(args)+1)
+		args = append(args, "%"+search.BySongName+"%")
+	}
+
+	if search.ByLyrics != "" {
+		if len(args) != 0 {
+			q += " AND"
+		}
+		q = fmt.Sprintf("%s EXISTS (SELECT 1 FROM verses v WHERE v.song_id = s.id AND v.verse ILIKE $%d", q, len(args)+1)
+		args = append(args, "%"+search.ByLyrics+"%")
+	}
+
+	if search.ByLink != "" {
+		if len(args) != 0 {
+			q += " AND"
+		}
+		q = fmt.Sprintf("%s s.link ILIKE $%d", q, len(args)+1)
+		args = append(args, "%"+search.ByLink+"%")
+	}
+
+	if !search.DateFrom.IsZero() {
+		if len(args) != 0 {
+			q += " AND"
+		}
+		q = fmt.Sprintf("%s s.releaseDate >= $%d", q, len(args)+1)
+		args = append(args, search.DateFrom)
+	}
+	if !search.DateTo.IsZero() {
+		if len(args) != 0 {
+			q += " AND"
+		}
+		q = fmt.Sprintf("%s s.releaseDate <= $%d", q, len(args)+1)
+		args = append(args, search.DateTo)
+	}
+
+	if len(args) == 0 {
+		q = ""
+	}
+
+	return &query{
+		query: q,
+		args:  args,
+	}
 }

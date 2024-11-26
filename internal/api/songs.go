@@ -18,6 +18,7 @@ type service interface {
 	Delete(context.Context, *domain.Song) error
 	Update(context.Context, *domain.Song, *domain.SongUpdate) error
 	GetLyrics(context.Context, *domain.Song, *domain.Batch) ([]string, error)
+	Search(context.Context, *domain.SongSearch) ([]*domain.Song, error)
 }
 
 type SongsAPI struct {
@@ -59,6 +60,8 @@ func (s *SongsAPI) Register(r *mux.Router) {
 
 	r.Path("/lyrics").HandlerFunc(s.getLyrics).Methods(http.MethodGet).
 		Queries(append(groupAndSong, offsetAndLimit...)...)
+
+	r.Path("/search").HandlerFunc(s.search).Methods(http.MethodGet)
 }
 
 func (s *SongsAPI) info(w http.ResponseWriter, r *http.Request) {
@@ -115,7 +118,35 @@ func (s *SongsAPI) getLyrics(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *SongsAPI) search(w http.ResponseWriter, r *http.Request) {
+	msg := logmsg.NewLogMsg(r.Context(), r.RequestURI, r.Method)
 
+	search := &domain.SongSearch{}
+
+	err := web.ReadRequestBody(r, search)
+	if err != nil {
+		web.WriteError(w, msg.With(err.Error(), http.StatusBadRequest))
+		return
+	}
+
+	err = s.valid.StructCtx(r.Context(), search)
+	if err != nil {
+		web.WriteError(w, msg.With(err.Error(), http.StatusUnprocessableEntity))
+		return
+	}
+
+	songs, err := s.srv.Search(r.Context(), search)
+	if err != nil {
+		web.WriteError(w, msg.With(err.Error(), http.StatusBadRequest))
+		return
+	}
+
+	web.WriteData(
+		w,
+		msg.With("OK", http.StatusOK),
+		map[string]any{
+			"songs": songs,
+		},
+	)
 }
 
 func (s *SongsAPI) update(w http.ResponseWriter, r *http.Request) {

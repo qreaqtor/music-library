@@ -18,10 +18,11 @@ type SongInfo struct {
 type SongSearch struct {
 	Batch
 
-	Search string `json:"search" valid:"required"`
+	ByGroup    string `json:"by_group" valid:"omitempty,min=1"`
+	BySongName string `json:"by_song_name" valid:"omitempty,min=1"`
+	ByLyrics   string `json:"by_lyrics" valid:"omitempty,min=1"`
+	ByLink     string `json:"by_link" valid:"omitempty,min=1"`
 
-	ByGroup    bool `json:"by_group" valid:"required"`
-	BySongName bool `json:"by_song_name" valid:"required"`
-	ByLyrics   bool `json:"by_lyrics" valid:"required"`
-	ByLink     bool `json:"by_link" valid:"required"`
+	DateFrom time.Time `json:"from" valid:"omitempty"`
+	DateTo   time.Time `json:"to" valid:"omitempty"`
 }
