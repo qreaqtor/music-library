@@ -11,6 +11,7 @@ type storage interface {
 	Create(context.Context, *domain.Song) error
 	Delete(context.Context, *domain.Song) error
 	Update(context.Context, *domain.Song, *domain.SongUpdate) error
+	GetLyrics(context.Context, *domain.Song, *domain.Batch) ([]string, error)
 }
 
 type SongsService struct {
@@ -21,6 +22,10 @@ func NewSongsService(storage storage) *SongsService {
 	return &SongsService{
 		st: storage,
 	}
+}
+
+func (s *SongsService) GetLyrics(ctx context.Context, song *domain.Song, batch *domain.Batch) ([]string, error) {
+	return s.st.GetLyrics(ctx, song, batch)
 }
 
 func (s *SongsService) Info(ctx context.Context, song *domain.Song) (*domain.SongInfo, error) {

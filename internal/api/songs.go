@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"net/http"
+	"strconv"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/mux"
@@ -16,6 +17,7 @@ type service interface {
 	Create(context.Context, *domain.Song) error
 	Delete(context.Context, *domain.Song) error
 	Update(context.Context, *domain.Song, *domain.SongUpdate) error
+	GetLyrics(context.Context, *domain.Song, *domain.Batch) ([]string, error)
 }
 
 type SongsAPI struct {
@@ -26,37 +28,41 @@ type SongsAPI struct {
 
 func NewSongsAPI(srv service) *SongsAPI {
 	return &SongsAPI{
-		srv: srv,
+		srv:   srv,
 		valid: validator.New(validator.WithRequiredStructEnabled()),
 	}
 }
 
 func (s *SongsAPI) Register(r *mux.Router) {
+	groupAndSong := []string{
+		"group", "{group:.+}",
+		"song", "{song:.+}",
+	}
+
+	offsetAndLimit := []string{
+		"offset", `{offset:\d+}`,
+		"limit", `{limit:[1-9][\d+]?}`,
+	}
+
 	r.Path("/search").HandlerFunc(s.search).Methods(http.MethodGet)
 
 	r.Path("/create").HandlerFunc(s.create).Methods(http.MethodPost)
 
 	r.Path("/info").HandlerFunc(s.info).Methods(http.MethodGet).
-		Queries(
-			"group", "{group:.+}",
-			"song", "{song:.+}",
-		)
+		Queries(groupAndSong...)
 
 	r.Path("/update").HandlerFunc(s.update).Methods(http.MethodPatch).
-		Queries(
-			"group", "{group:.+}",
-			"song", "{song:.+}",
-		)
+		Queries(groupAndSong...)
 
 	r.Path("/delete").HandlerFunc(s.delete).Methods(http.MethodDelete).
-		Queries(
-			"group", "{group:.+}",
-			"song", "{song:.+}",
-		)
+		Queries(groupAndSong...)
+
+	r.Path("/lyrics").HandlerFunc(s.getLyrics).Methods(http.MethodGet).
+		Queries(append(groupAndSong, offsetAndLimit...)...)
 }
 
 func (s *SongsAPI) info(w http.ResponseWriter, r *http.Request) {
-	msg := logmsg.NewLogMsg(r.Context(), r.URL.Path, r.Method)
+	msg := logmsg.NewLogMsg(r.Context(), r.RequestURI, r.Method)
 
 	song := &domain.Song{
 		Group:    r.URL.Query().Get("group"),
@@ -76,12 +82,44 @@ func (s *SongsAPI) info(w http.ResponseWriter, r *http.Request) {
 	)
 }
 
+func (s *SongsAPI) getLyrics(w http.ResponseWriter, r *http.Request) {
+	msg := logmsg.NewLogMsg(r.Context(), r.RequestURI, r.Method)
+
+	song := &domain.Song{
+		Group:    r.URL.Query().Get("group"),
+		SongName: r.URL.Query().Get("song"),
+	}
+
+	// ignore errors, because i used regexp for this query params
+	offset, _ := strconv.Atoi(r.URL.Query().Get("offset"))
+	limit, _ := strconv.Atoi(r.URL.Query().Get("limit"))
+
+	batch := &domain.Batch{
+		Offset: offset,
+		Limit:  limit,
+	}
+
+	text, err := s.srv.GetLyrics(r.Context(), song, batch)
+	if err != nil {
+		web.WriteError(w, msg.With(err.Error(), http.StatusBadRequest))
+		return
+	}
+
+	web.WriteData(
+		w,
+		msg.With("OK", http.StatusOK),
+		map[string]any{
+			"lyrics": text,
+		},
+	)
+}
+
 func (s *SongsAPI) search(w http.ResponseWriter, r *http.Request) {
 
 }
 
 func (s *SongsAPI) update(w http.ResponseWriter, r *http.Request) {
-	msg := logmsg.NewLogMsg(r.Context(), r.URL.Path, r.Method)
+	msg := logmsg.NewLogMsg(r.Context(), r.RequestURI, r.Method)
 
 	song := &domain.Song{
 		Group:    r.URL.Query().Get("group"),
@@ -141,7 +179,7 @@ func (s *SongsAPI) delete(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *SongsAPI) create(w http.ResponseWriter, r *http.Request) {
-	msg := logmsg.NewLogMsg(r.Context(), r.URL.Path, r.Method)
+	msg := logmsg.NewLogMsg(r.Context(), r.RequestURI, r.Method)
 
 	song := &domain.Song{}
 

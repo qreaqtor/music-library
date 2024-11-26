@@ -15,14 +15,6 @@ type SongInfo struct {
 	Link        string    `json:"link"`
 }
 
-type SongUpdate struct {
-	Group       string    `json:"group" validate:"omitempty,min=1"`
-	SongName    string    `json:"song" validate:"omitempty,min=1"`
-	Lyrics      []string  `json:"lyrics" validate:"omitempty,min=1"`
-	Link        string    `json:"link" validate:"omitempty,http_url"`
-	ReleaseDate time.Time `json:"releaseDate" validate:"omitempty"`
-}
-
 type SongSearch struct {
 	Batch
 
