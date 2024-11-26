@@ -1,3 +1,4 @@
+basePath: /v1
 definitions:
   domain.Song:
     properties:
@@ -22,26 +23,6 @@ definitions:
       releaseDate:
         type: string
       song:
-        type: string
-    type: object
-  domain.SongSearch:
-    properties:
-      by_group:
-        type: string
-      by_link:
-        type: string
-      by_lyrics:
-        type: string
-      by_song_name:
-        type: string
-      from:
-        type: string
-      limit:
-        type: integer
-      offset:
-        minimum: 0
-        type: integer
-      to:
         type: string
     type: object
   domain.SongUpdate:
@@ -165,10 +146,12 @@ paths:
       - description: Offset for batch
         in: query
         name: offset
+        required: true
         type: integer
       - description: Limit for batch
         in: query
         name: limit
+        required: true
         type: integer
       produces:
       - application/json
@@ -176,7 +159,8 @@ paths:
         "200":
           description: OK
           schema:
-            additionalProperties: true
+            additionalProperties:
+              type: string
             type: object
       summary: Get song lyrics
       tags:
@@ -187,12 +171,40 @@ paths:
       - application/json
       description: Search for songs based on various criteria
       parameters:
-      - description: Search parameters
-        in: body
-        name: search
+      - description: Search by group name
+        in: query
+        name: by_group
+        type: string
+      - description: Search by song name
+        in: query
+        name: by_song_name
+        type: string
+      - description: Search by lyrics
+        in: query
+        name: by_lyrics
+        type: string
+      - description: Search by external link
+        in: query
+        name: by_link
+        type: string
+      - description: Search songs from this date
+        in: query
+        name: date_from
+        type: string
+      - description: Search songs up to this date
+        in: query
+        name: date_to
+        type: string
+      - description: Offset for batch
+        in: query
+        name: offset
         required: true
-        schema:
-          $ref: '#/definitions/domain.SongSearch'
+        type: integer
+      - description: Limit for batch
+        in: query
+        name: limit
+        required: true
+        type: integer
       produces:
       - application/json
       responses:

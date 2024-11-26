@@ -24,7 +24,7 @@ func getSongUpdateQuery(song *domain.Song, update domain.SongSchema) (*query, er
 
 	updateVal := reflect.ValueOf(update)
 
-	for i, field := range reflect.VisibleFields(reflect.TypeOf(update)) {
+	for _, field := range reflect.VisibleFields(reflect.TypeOf(update)) {
 		value := updateVal.FieldByName(field.Name)
 		columnTag := field.Tag.Get("db")
 
@@ -32,12 +32,12 @@ func getSongUpdateQuery(song *domain.Song, update domain.SongSchema) (*query, er
 			continue
 		}
 
-		current := fmt.Sprintf(" %s = $%d,", columnTag, i+1)
+		current := fmt.Sprintf(" %s = $%d,", columnTag, len(args)+1)
 		q = fmt.Sprint(q, current)
 
 		switch value.Interface().(type) {
 		case string:
-			args = append(args, value.String())
+			args = append(args, value.Interface().(string))
 		case time.Time:
 			args = append(args, value.Interface().(time.Time))
 		default:
@@ -49,7 +49,7 @@ func getSongUpdateQuery(song *domain.Song, update domain.SongSchema) (*query, er
 		return nil, ErrEmptySongUpdate
 	}
 
-	q = fmt.Sprintf("%s WHERE group_name = $%d AND song = $%d RETURNING id;",
+	q = fmt.Sprintf("%s WHERE group_name = $%d AND song = $%d;",
 		q[:len(q)-1],
 		len(args)+1,
 		len(args)+2,

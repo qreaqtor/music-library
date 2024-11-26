@@ -30,7 +30,8 @@ func (s *SongsStorage) Info(ctx context.Context, song *domain.Song) (*domain.Son
 	query :=
 		`SELECT s.group_name, s.song, COALESCE(STRING_AGG(v.verse, '\n'), ''), s.releaseDate, COALESCE(s.link, '')
 		FROM songs s LEFT JOIN verses v ON s.id = v.song_id
-		WHERE s.group_name = $1 AND s.song = $2;`
+		WHERE s.group_name = $1 AND s.song = $2
+		GROUP BY s.id, s.group_name, s.song, s.releaseDate, s.link;`
 
 	err := s.db.QueryRow(query, song.Group, song.SongName).
 		Scan(
@@ -174,15 +175,7 @@ func (s *SongsStorage) Update(ctx context.Context, song *domain.Song, update *do
 	}
 	defer tx.Rollback()
 
-	songQuery, err := getSongUpdateQuery(song, update.ToSongSchema())
-	if err != nil {
-		slog.Debug(err.Error(), "operation", opID)
-		songQuery = &query{
-			query: "SELECT id FROM songs WHERE group_name = $1 AND song = $2",
-			args:  []any{song.Group, song.SongName},
-		}
-	}
-	row := tx.QueryRow(songQuery.query, songQuery.args...)
+	row := tx.QueryRow("SELECT id FROM songs WHERE group_name = $1 AND song = $2;", song.Group, song.SongName)
 	err = row.Scan(&songID)
 	if errors.Is(err, sql.ErrNoRows) {
 		slog.Debug(err.Error(), "operation", opID)
@@ -190,6 +183,17 @@ func (s *SongsStorage) Update(ctx context.Context, song *domain.Song, update *do
 	}
 	if err != nil {
 		return err
+	}
+
+	songQuery, err := getSongUpdateQuery(song, update.ToSongSchema())
+	if err != nil {
+		slog.Debug(err.Error(), "operation", opID)
+	} else {
+		_, err = tx.Exec(songQuery.query, songQuery.args...)
+		if err != nil {
+			slog.Debug(fmt.Sprintf("%#v", songQuery))
+			return err
+		}
 	}
 
 	_, err = tx.Exec(`DELETE FROM verses WHERE song_id = $1;`, songID)

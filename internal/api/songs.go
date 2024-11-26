@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/mux"
@@ -40,6 +41,7 @@ func NewSongsAPI(srv service) *SongsAPI {
 // @title Music-library API
 // @version 1.0
 // @description This is an implementation of an online song library
+// @BasePath /v1
 func (s *SongsAPI) Register(r *mux.Router) {
 	groupAndSong := []string{
 		"group", "{group:.+}",
@@ -112,9 +114,9 @@ func (s *SongsAPI) info(w http.ResponseWriter, r *http.Request) {
 // @Produce json
 // @Param group query string true "Group name"
 // @Param song query string true "Song name"
-// @Param offset query int false "Offset for batch"
-// @Param limit query int false "Limit for batch"
-// @Success 200 {object} map[string]any
+// @Param offset query int true "Offset for batch"
+// @Param limit query int true "Limit for batch"
+// @Success 200 {object} map[string]string
 // @Router /lyrics [get]
 func (s *SongsAPI) getLyrics(w http.ResponseWriter, r *http.Request) {
 	msg := logmsg.NewLogMsg(r.Context(), r.RequestURI, r.Method)
@@ -153,21 +155,56 @@ func (s *SongsAPI) getLyrics(w http.ResponseWriter, r *http.Request) {
 // @Tags songs
 // @Accept json
 // @Produce json
-// @Param search body domain.SongSearch true "Search parameters"
+// @Param by_group query string false "Search by group name"
+// @Param by_song_name query string false "Search by song name"
+// @Param by_lyrics query string false "Search by lyrics"
+// @Param by_link query string false "Search by external link"
+// @Param date_from query string false "Search songs from this date"
+// @Param date_to query string false "Search songs up to this date"
+// @Param offset query int true "Offset for batch"
+// @Param limit query int true "Limit for batch"
 // @Success 200 {object} map[string]any
 // @Router /search [get]
 func (s *SongsAPI) search(w http.ResponseWriter, r *http.Request) {
 	msg := logmsg.NewLogMsg(r.Context(), r.RequestURI, r.Method)
 
-	search := &domain.SongSearch{}
-
-	err := web.ReadRequestBody(r, search)
-	if err != nil {
-		web.WriteError(w, msg.With(err.Error(), http.StatusBadRequest))
-		return
+	var dateFrom, dateTo time.Time
+	if dateFromStr := r.URL.Query().Get("date_from"); dateFromStr != "" {
+		parsedDate, err := time.Parse("2006-01-02", dateFromStr)
+		if err != nil {
+			web.WriteError(w, msg.With("Invalid date_from format, use YYYY-MM-DD", http.StatusBadRequest))
+			return
+		}
+		dateFrom = parsedDate
 	}
 
-	err = s.valid.StructCtx(r.Context(), search)
+	if dateToStr := r.URL.Query().Get("date_to"); dateToStr != "" {
+		parsedDate, err := time.Parse("2006-01-02", dateToStr)
+		if err != nil {
+			web.WriteError(w, msg.With("Invalid date_to format, use YYYY-MM-DD", http.StatusBadRequest))
+			return
+		}
+		dateTo = parsedDate
+	}
+
+	// ignore errors, because i used regexp for this query params
+	offset, _ := strconv.Atoi(r.URL.Query().Get("offset"))
+	limit, _ := strconv.Atoi(r.URL.Query().Get("limit"))
+
+	search := &domain.SongSearch{
+		ByGroup:    r.URL.Query().Get("by_group"),
+		BySongName: r.URL.Query().Get("by_song_name"),
+		ByLyrics:   r.URL.Query().Get("by_lyrics"),
+		ByLink:     r.URL.Query().Get("by_link"),
+		DateFrom:   dateFrom,
+		DateTo:     dateTo,
+		Batch: domain.Batch{
+			Offset: offset,
+			Limit:  limit,
+		},
+	}
+
+	err := s.valid.StructCtx(r.Context(), search)
 	if err != nil {
 		web.WriteError(w, msg.With(err.Error(), http.StatusUnprocessableEntity))
 		return

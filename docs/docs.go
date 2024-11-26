@@ -165,13 +165,15 @@ const docTemplate = `{
                         "type": "integer",
                         "description": "Offset for batch",
                         "name": "offset",
-                        "in": "query"
+                        "in": "query",
+                        "required": true
                     },
                     {
                         "type": "integer",
                         "description": "Limit for batch",
                         "name": "limit",
-                        "in": "query"
+                        "in": "query",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -179,7 +181,9 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "type": "object",
-                            "additionalProperties": true
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     }
                 }
@@ -200,13 +204,54 @@ const docTemplate = `{
                 "summary": "Search for songs",
                 "parameters": [
                     {
-                        "description": "Search parameters",
-                        "name": "search",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/domain.SongSearch"
-                        }
+                        "type": "string",
+                        "description": "Search by group name",
+                        "name": "by_group",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search by song name",
+                        "name": "by_song_name",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search by lyrics",
+                        "name": "by_lyrics",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search by external link",
+                        "name": "by_link",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search songs from this date",
+                        "name": "date_from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search songs up to this date",
+                        "name": "date_to",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Offset for batch",
+                        "name": "offset",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Limit for batch",
+                        "name": "limit",
+                        "in": "query",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -310,36 +355,6 @@ const docTemplate = `{
                 }
             }
         },
-        "domain.SongSearch": {
-            "type": "object",
-            "properties": {
-                "by_group": {
-                    "type": "string"
-                },
-                "by_link": {
-                    "type": "string"
-                },
-                "by_lyrics": {
-                    "type": "string"
-                },
-                "by_song_name": {
-                    "type": "string"
-                },
-                "from": {
-                    "type": "string"
-                },
-                "limit": {
-                    "type": "integer"
-                },
-                "offset": {
-                    "type": "integer",
-                    "minimum": 0
-                },
-                "to": {
-                    "type": "string"
-                }
-            }
-        },
         "domain.SongUpdate": {
             "type": "object",
             "properties": {
@@ -373,7 +388,7 @@ const docTemplate = `{
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
 	Host:             "",
-	BasePath:         "",
+	BasePath:         "/v1",
 	Schemes:          []string{},
 	Title:            "Music-library API",
 	Description:      "This is an implementation of an online song library",
