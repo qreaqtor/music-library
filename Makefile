@@ -1,8 +1,8 @@
 PG_URL=postgres://user:password@localhost:5432/songs?sslmode=disable
 
 .PHONY: up-dev
-up:
-	docker-compose up -d
+up-dev:
+	export CONFIG_PATH="./config/dev.env" && docker-compose up -d
 
 .PHONY: up-local
 up-local:
@@ -15,6 +15,10 @@ down:
 .PHONY: .run-app-local
 run-app-local:
 	export CONFIG_PATH="./config/local.env" && go run cmd/music-library/main.go
+
+.PHONY: .gen-swagger
+gen-swagger:
+	swag init -g internal/api/songs.go
 
 .PHONY: .migration-up
 migration-up:

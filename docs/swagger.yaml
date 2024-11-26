@@ -1,0 +1,242 @@
+definitions:
+  domain.Song:
+    properties:
+      group:
+        minLength: 1
+        type: string
+      song:
+        minLength: 1
+        type: string
+    required:
+    - group
+    - song
+    type: object
+  domain.SongInfo:
+    properties:
+      group:
+        type: string
+      link:
+        type: string
+      lyrics:
+        type: string
+      releaseDate:
+        type: string
+      song:
+        type: string
+    type: object
+  domain.SongSearch:
+    properties:
+      by_group:
+        type: string
+      by_link:
+        type: string
+      by_lyrics:
+        type: string
+      by_song_name:
+        type: string
+      from:
+        type: string
+      limit:
+        type: integer
+      offset:
+        minimum: 0
+        type: integer
+      to:
+        type: string
+    type: object
+  domain.SongUpdate:
+    properties:
+      group:
+        minLength: 1
+        type: string
+      link:
+        type: string
+      lyrics:
+        items:
+          type: string
+        minItems: 1
+        type: array
+      releaseDate:
+        type: string
+      song:
+        minLength: 1
+        type: string
+    type: object
+info:
+  contact: {}
+  description: This is an implementation of an online song library
+  title: Music-library API
+  version: "1.0"
+paths:
+  /create:
+    post:
+      consumes:
+      - application/json
+      description: Add a new song to the database
+      parameters:
+      - description: Song data
+        in: body
+        name: song
+        required: true
+        schema:
+          $ref: '#/definitions/domain.Song'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create a new song
+      tags:
+      - songs
+  /delete:
+    delete:
+      consumes:
+      - application/json
+      description: Remove a song from the database
+      parameters:
+      - description: Group name
+        in: query
+        name: group
+        required: true
+        type: string
+      - description: Song name
+        in: query
+        name: song
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Delete a song
+      tags:
+      - songs
+  /info:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve detailed information about a song
+      parameters:
+      - description: Group name
+        in: query
+        name: group
+        required: true
+        type: string
+      - description: Song name
+        in: query
+        name: song
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.SongInfo'
+      summary: Get song info
+      tags:
+      - songs
+  /lyrics:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve lyrics of a song in batches
+      parameters:
+      - description: Group name
+        in: query
+        name: group
+        required: true
+        type: string
+      - description: Song name
+        in: query
+        name: song
+        required: true
+        type: string
+      - description: Offset for batch
+        in: query
+        name: offset
+        type: integer
+      - description: Limit for batch
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get song lyrics
+      tags:
+      - songs
+  /search:
+    get:
+      consumes:
+      - application/json
+      description: Search for songs based on various criteria
+      parameters:
+      - description: Search parameters
+        in: body
+        name: search
+        required: true
+        schema:
+          $ref: '#/definitions/domain.SongSearch'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Search for songs
+      tags:
+      - songs
+  /update:
+    patch:
+      consumes:
+      - application/json
+      description: Update details of a song including group, name, lyrics, link, and
+        release date
+      parameters:
+      - description: Group name
+        in: query
+        name: group
+        required: true
+        type: string
+      - description: Song name
+        in: query
+        name: song
+        required: true
+        type: string
+      - description: Update parameters
+        in: body
+        name: update
+        required: true
+        schema:
+          $ref: '#/definitions/domain.SongUpdate'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Update song information
+      tags:
+      - songs
+swagger: "2.0"

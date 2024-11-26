@@ -22,6 +22,8 @@ services:
       dockerfile: ./build/app.Dockerfile
     ports:
       - '50055:50055'
+    environment:
+      - CONFIG_PATH=${CONFIG_PATH}
     depends_on:
       - postgres
       - migrations

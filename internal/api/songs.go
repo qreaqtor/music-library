@@ -10,6 +10,9 @@ import (
 	"github.com/qreaqtor/music-library/internal/domain"
 	logmsg "github.com/qreaqtor/music-library/pkg/logging/message"
 	"github.com/qreaqtor/music-library/pkg/web"
+	httpSwagger "github.com/swaggo/http-swagger"
+
+	_ "github.com/qreaqtor/music-library/docs"
 )
 
 type service interface {
@@ -34,6 +37,9 @@ func NewSongsAPI(srv service) *SongsAPI {
 	}
 }
 
+// @title Music-library API
+// @version 1.0
+// @description This is an implementation of an online song library
 func (s *SongsAPI) Register(r *mux.Router) {
 	groupAndSong := []string{
 		"group", "{group:.+}",
@@ -44,8 +50,6 @@ func (s *SongsAPI) Register(r *mux.Router) {
 		"offset", `{offset:\d+}`,
 		"limit", `{limit:[1-9][\d+]?}`,
 	}
-
-	r.Path("/search").HandlerFunc(s.search).Methods(http.MethodGet)
 
 	r.Path("/create").HandlerFunc(s.create).Methods(http.MethodPost)
 
@@ -62,8 +66,24 @@ func (s *SongsAPI) Register(r *mux.Router) {
 		Queries(append(groupAndSong, offsetAndLimit...)...)
 
 	r.Path("/search").HandlerFunc(s.search).Methods(http.MethodGet)
+
+	r.PathPrefix("/swagger/").Handler(httpSwagger.Handler(
+		httpSwagger.URL("http://localhost:50055/v1/swagger/doc.json"), //The url pointing to API definition
+		httpSwagger.DeepLinking(true),
+		httpSwagger.DocExpansion("none"),
+		httpSwagger.DomID("swagger-ui"),
+	)).Methods(http.MethodGet)
 }
 
+// @Summary Get song info
+// @Description Retrieve detailed information about a song
+// @Tags songs
+// @Accept json
+// @Produce json
+// @Param group query string true "Group name"
+// @Param song query string true "Song name"
+// @Success 200 {object} domain.SongInfo
+// @Router /info [get]
 func (s *SongsAPI) info(w http.ResponseWriter, r *http.Request) {
 	msg := logmsg.NewLogMsg(r.Context(), r.RequestURI, r.Method)
 
@@ -85,6 +105,17 @@ func (s *SongsAPI) info(w http.ResponseWriter, r *http.Request) {
 	)
 }
 
+// @Summary Get song lyrics
+// @Description Retrieve lyrics of a song in batches
+// @Tags songs
+// @Accept json
+// @Produce json
+// @Param group query string true "Group name"
+// @Param song query string true "Song name"
+// @Param offset query int false "Offset for batch"
+// @Param limit query int false "Limit for batch"
+// @Success 200 {object} map[string]any
+// @Router /lyrics [get]
 func (s *SongsAPI) getLyrics(w http.ResponseWriter, r *http.Request) {
 	msg := logmsg.NewLogMsg(r.Context(), r.RequestURI, r.Method)
 
@@ -117,6 +148,14 @@ func (s *SongsAPI) getLyrics(w http.ResponseWriter, r *http.Request) {
 	)
 }
 
+// @Summary Search for songs
+// @Description Search for songs based on various criteria
+// @Tags songs
+// @Accept json
+// @Produce json
+// @Param search body domain.SongSearch true "Search parameters"
+// @Success 200 {object} map[string]any
+// @Router /search [get]
 func (s *SongsAPI) search(w http.ResponseWriter, r *http.Request) {
 	msg := logmsg.NewLogMsg(r.Context(), r.RequestURI, r.Method)
 
@@ -149,6 +188,16 @@ func (s *SongsAPI) search(w http.ResponseWriter, r *http.Request) {
 	)
 }
 
+// @Summary Update song information
+// @Description Update details of a song including group, name, lyrics, link, and release date
+// @Tags songs
+// @Accept json
+// @Produce json
+// @Param group query string true "Group name"
+// @Param song query string true "Song name"
+// @Param update body domain.SongUpdate true "Update parameters"
+// @Success 200 {object} map[string]string
+// @Router /update [patch]
 func (s *SongsAPI) update(w http.ResponseWriter, r *http.Request) {
 	msg := logmsg.NewLogMsg(r.Context(), r.RequestURI, r.Method)
 
@@ -186,6 +235,15 @@ func (s *SongsAPI) update(w http.ResponseWriter, r *http.Request) {
 	)
 }
 
+// @Summary Delete a song
+// @Description Remove a song from the database
+// @Tags songs
+// @Accept json
+// @Produce json
+// @Param group query string true "Group name"
+// @Param song query string true "Song name"
+// @Success 200 {object} map[string]string
+// @Router /delete [delete]
 func (s *SongsAPI) delete(w http.ResponseWriter, r *http.Request) {
 	msg := logmsg.NewLogMsg(r.Context(), r.RequestURI, r.Method)
 
@@ -209,6 +267,14 @@ func (s *SongsAPI) delete(w http.ResponseWriter, r *http.Request) {
 	)
 }
 
+// @Summary Create a new song
+// @Description Add a new song to the database
+// @Tags songs
+// @Accept json
+// @Produce json
+// @Param song body domain.Song true "Song data"
+// @Success 200 {object} map[string]string
+// @Router /create [post]
 func (s *SongsAPI) create(w http.ResponseWriter, r *http.Request) {
 	msg := logmsg.NewLogMsg(r.Context(), r.RequestURI, r.Method)
 
