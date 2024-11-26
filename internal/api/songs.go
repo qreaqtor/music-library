@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -10,10 +11,10 @@ import (
 )
 
 type service interface {
-	Info(*domain.Song) (*domain.SongInfo, error)
-	Create(*domain.Song) error
-	Delete(*domain.Song) error
-	Update(*domain.Song, *domain.SongUpdate) error
+	Info(context.Context, *domain.Song) (*domain.SongInfo, error)
+	Create(context.Context, *domain.Song) error
+	Delete(context.Context, *domain.Song) error
+	Update(context.Context, *domain.Song, *domain.SongUpdate) error
 }
 
 type SongsAPI struct {
@@ -26,21 +27,28 @@ func NewSongsAPI(srv service) *SongsAPI {
 	}
 }
 
-func (s *SongsAPI) Register(r mux.Router) {
+func (s *SongsAPI) Register(r *mux.Router) {
 	r.Path("/search").HandlerFunc(s.search).Methods(http.MethodGet)
 
 	r.Path("/create").HandlerFunc(s.create).Methods(http.MethodPost)
 
-	rQueries := r.NewRoute().Subrouter().Queries(
-		"group", "{group:.+}",
-		"song", "{song:.+}",
-	)
+	r.Path("/info").HandlerFunc(s.info).Methods(http.MethodGet).
+		Queries(
+			"group", "{group:.+}",
+			"song", "{song:.+}",
+		)
 
-	rQueries.Path("/info").HandlerFunc(s.info).Methods(http.MethodGet)
+	r.Path("/update").HandlerFunc(s.update).Methods(http.MethodPatch).
+		Queries(
+			"group", "{group:.+}",
+			"song", "{song:.+}",
+		)
 
-	rQueries.Path("/update").HandlerFunc(s.update).Methods(http.MethodPatch)
-
-	rQueries.Path("/delete").HandlerFunc(s.delete).Methods(http.MethodDelete)
+	r.Path("/delete").HandlerFunc(s.delete).Methods(http.MethodDelete).
+		Queries(
+			"group", "{group:.+}",
+			"song", "{song:.+}",
+		)
 }
 
 func (s *SongsAPI) info(w http.ResponseWriter, r *http.Request) {
@@ -51,7 +59,7 @@ func (s *SongsAPI) info(w http.ResponseWriter, r *http.Request) {
 		SongName: r.URL.Query().Get("song"),
 	}
 
-	songInfo, err := s.srv.Info(song)
+	songInfo, err := s.srv.Info(r.Context(), song)
 	if err != nil {
 		web.WriteError(w, msg.With(err.Error(), http.StatusBadRequest))
 		return
@@ -90,7 +98,7 @@ func (s *SongsAPI) update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = s.srv.Update(song, songUpdate)
+	err = s.srv.Update(r.Context(), song, songUpdate)
 	if err != nil {
 		web.WriteError(w, msg.With(err.Error(), http.StatusBadRequest))
 		return
@@ -106,16 +114,16 @@ func (s *SongsAPI) update(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *SongsAPI) delete(w http.ResponseWriter, r *http.Request) {
-	msg := logmsg.NewLogMsg(r.Context(), r.URL.Path, r.Method)
+	msg := logmsg.NewLogMsg(r.Context(), r.RequestURI, r.Method)
 
 	song := &domain.Song{
 		Group:    r.URL.Query().Get("group"),
 		SongName: r.URL.Query().Get("song"),
 	}
 
-	err := s.srv.Delete(song)
+	err := s.srv.Delete(r.Context(), song)
 	if err != nil {
-		web.WriteError(w, msg.With(err.Error(), http.StatusBadRequest))
+		web.WriteError(w, msg.With(err.Error(), http.StatusNotFound))
 		return
 	}
 
@@ -145,7 +153,7 @@ func (s *SongsAPI) create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = s.srv.Create(song)
+	err = s.srv.Create(r.Context(), song)
 	if err != nil {
 		web.WriteError(w, msg.With(err.Error(), http.StatusBadRequest))
 		return

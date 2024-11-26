@@ -31,7 +31,7 @@ func setupLogger(env string) {
 		handler = slog.NewJSONHandler(
 			out,
 			&slog.HandlerOptions{
-				Level: slog.LevelInfo,
+				Level: slog.LevelDebug,
 			})
 	case prod:
 		handler = slog.NewJSONHandler(

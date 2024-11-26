@@ -3,7 +3,7 @@
 SELECT 'up SQL query';
 -- +goose StatementEnd
 
-CREATE INDEX idx_group_song ON songs (group, song);
+CREATE INDEX idx_group_song ON songs (group_name, song);
 
 -- +goose Down
 -- +goose StatementBegin

@@ -5,11 +5,11 @@ SELECT 'up SQL query';
 
 create table songs
 (
-    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    group varchar(100) NOT NULL,
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid (),
+    group_name varchar(100) NOT NULL,
     song varchar(100) NOT NULL,
     releaseDate DATE DEFAULT current_date,
-    link text,
+    link text
 );
 
 -- +goose Down

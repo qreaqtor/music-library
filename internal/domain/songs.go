@@ -3,14 +3,14 @@ package domain
 import "time"
 
 type Song struct {
-	Group    string `json:"group" validate:"minstringlength(1)"`
-	SongName string `json:"song" validate:"minstringlength(1)"`
+	Group    string `json:"group" validate:"required,min=1"`
+	SongName string `json:"song" validate:"required,min=1"`
 }
 
 type SongInfo struct {
 	Group       string    `json:"group"`
 	SongName    string    `json:"song"`
-	Lyrics      []string  `json:"lyrics"`
+	Lyrics      string  `json:"lyrics"`
 	ReleaseDate time.Time `json:"releaseDate"`
 	Link        string    `json:"link"`
 }

@@ -5,8 +5,9 @@ SELECT 'up SQL query';
 
 create table verses
 (
-    id uuid REFERENCES songs (id),
+    id uuid PRIMARY KEY,
     verse text NOT NULL,
+    FOREIGN KEY (id) REFERENCES songs (id) ON DELETE CASCADE
 );
 
 -- +goose Down

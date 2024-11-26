@@ -8,6 +8,8 @@ import (
 
 type ContextKey string
 
-func ExtractLogID(ctx context.Context) uuid.UUID {
-	return ctx.Value(ContextKey("logID")).(uuid.UUID)
+const OperationID ContextKey = "operationID"
+
+func ExtractOperationID(ctx context.Context) uuid.UUID {
+	return ctx.Value(OperationID).(uuid.UUID)
 }

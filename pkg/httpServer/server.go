@@ -17,7 +17,6 @@ func NewHTTPServer(handler http.Handler) *HTTPServer {
 			Handler: handler,
 		},
 	}
-	server.AddMiddlewares(setOperationID, panic)
 
 	return server
 }
@@ -38,6 +37,7 @@ func (h *HTTPServer) AddMiddlewares(middlewares ...Middleware) {
 }
 
 func (h *HTTPServer) Serve(l net.Listener) error {
+	h.AddMiddlewares(panic, setOperationID)
 	slog.Info("Start http server at " + l.Addr().String())
 	return h.server.Serve(l)
 }

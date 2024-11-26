@@ -86,6 +86,10 @@ func (a *AppServer) Start() error {
 
 // waiting when all goroutines is done and return serve errors
 func (a *AppServer) Wait() []error {
+	if !a.started.Load() {
+		return []error{ErrNotStarted}
+	}
+
 	errs := make([]error, 0)
 
 	for err := range a.errChan {

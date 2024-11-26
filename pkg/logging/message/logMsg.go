@@ -8,27 +8,31 @@ import (
 )
 
 type LogMsg struct {
-	id     uuid.UUID
-	URL    string
-	Method string
-	Text   string
-	Status int
+	opareation uuid.UUID
+	URL        string
+	Method     string
+	Text       string
+	Status     int
 }
 
 // Возвращает структуру, которая пишет логи с помощью logger.
 // Остальные поля - информация, которая будет выводиться.
 func NewLogMsg(ctx context.Context, url, method string) *LogMsg {
 	return &LogMsg{
-		URL:    url,
-		Method: method,
-		id:ExtractLogID(ctx),
+		URL:        url,
+		Method:     method,
+		opareation: ExtractOperationID(ctx),
 	}
 }
 
 func (msg *LogMsg) With(text string, status int) *LogMsg {
-	msg.Text = text
-	msg.Status = status
-	return msg
+	return &LogMsg{
+		Text:       text,
+		Status:     status,
+		opareation: msg.opareation,
+		URL:        msg.URL,
+		Method:     msg.Method,
+	}
 }
 
 func (msg *LogMsg) Info() {
@@ -44,5 +48,6 @@ func getArgs(msg *LogMsg) []any {
 		"status", msg.Status,
 		"url", msg.URL,
 		"method", msg.Method,
+		"operation", msg.opareation,
 	}
 }
